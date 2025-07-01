@@ -1,8 +1,11 @@
 import { Update, Start, Ctx, Hears, Command } from 'nestjs-telegraf';
+import { ProductsService } from 'src/products/products.service';
 import { Context } from 'telegraf';
 
 @Update()
 export class BotUpdate {
+  constructor(private readonly productsService: ProductsService) {}
+
   @Start()
   async onStart(@Ctx() ctx: Context) {
     const name = ctx.from?.first_name || 'пользователь';
@@ -38,6 +41,21 @@ export class BotUpdate {
         ],
       },
     });
+  }
+
+  @Command('products') // <-- новый хэндлер
+  async onProducts(@Ctx() ctx: Context) {
+    const items = await this.productsService.findAll();
+    if (items.length === 0) {
+      return ctx.reply('Список товаров пуст 😢');
+    }
+    // Собираем текстовый ответ
+    const lines = items.map((p) => {
+      const status = p.quantity >= p.minThreshold ? '🟢' : '🔴';
+      const unit = p.unit ? ` ${p.unit}` : '';
+      return `${status} ${p.name} — ${p.quantity}${unit} (мин. ${p.minThreshold})`;
+    });
+    await ctx.reply(`📦 *Товары:*\n\n` + lines.join('\n'), { parse_mode: 'Markdown' });
   }
 
   // Можно добавить 👇 для теста
