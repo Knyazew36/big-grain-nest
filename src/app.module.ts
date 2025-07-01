@@ -9,6 +9,8 @@ import { ProductsModule } from './products/products.module';
 import { PrismaModule } from 'nestjs-prisma';
 @Module({
   imports: [
+    PrismaModule.forRoot(),
+
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'], // явно указываем путь к .env

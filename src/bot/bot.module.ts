@@ -4,6 +4,8 @@ import { BotUpdate } from './bot.update';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductsModule } from 'src/products/products.module';
 import { ProductsService } from 'src/products/products.service';
+import { PrismaModule } from 'nestjs-prisma';
+import { PrismaService } from 'src/prisma.service';
 
 @Module({
   imports: [
@@ -19,7 +21,8 @@ import { ProductsService } from 'src/products/products.service';
       inject: [ConfigService],
     }),
     ProductsModule,
+    PrismaModule,
   ],
-  providers: [BotUpdate, ProductsService],
+  providers: [BotUpdate, ProductsService, PrismaService],
 })
 export class BotModule {}

@@ -18,6 +18,8 @@ export class TelegramAuthGuard implements CanActivate {
       throw new UnauthorizedException('No Telegram auth data');
     }
 
+    console.dir(initData);
+
     const params = new URLSearchParams(initData);
     const data: Record<string, string> = {};
     params.forEach((value, key) => (data[key] = value));
