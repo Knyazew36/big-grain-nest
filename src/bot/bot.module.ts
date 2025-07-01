@@ -140,6 +140,6 @@ import { NextFunction } from 'express';
       }),
     }),
   ],
-  providers: [ProductsService, 1PrismaService, BotUpdate],
+  providers: [ProductsService, PrismaService, BotUpdate],
 })
 export class BotModule {}
