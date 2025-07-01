@@ -1,13 +1,30 @@
+import { PrismaService } from 'nestjs-prisma';
 import { Update, Start, Ctx, Hears, Command } from 'nestjs-telegraf';
 import { ProductsService } from 'src/products/products.service';
 import { Context } from 'telegraf';
+import { requireRole } from './utils/bot.utlis';
+import { Role } from '@prisma/client';
 
 @Update()
 export class BotUpdate {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  private async ensureUser(ctx: Context) {
+    if (ctx.from?.id) {
+      await this.prisma.user.upsert({
+        where: { telegramId: String(ctx.from.id) },
+        update: {},
+        create: { telegramId: String(ctx.from.id) },
+      });
+    }
+  }
 
   @Start()
   async onStart(@Ctx() ctx: Context) {
+    // console.log('ctx', ctx.from);
     const name = ctx.from?.first_name || 'пользователь';
     await ctx.reply(
       `Привет, ${name}! 👋\n\nДобро пожаловать в управление складом.\n\nНажми кнопку ниже, чтобы открыть мини-приложение.`,
@@ -56,6 +73,26 @@ export class BotUpdate {
       return `${status} ${p.name} — ${p.quantity}${unit} (мин. ${p.minThreshold})`;
     });
     await ctx.reply(`📦 *Товары:*\n\n` + lines.join('\n'), { parse_mode: 'Markdown' });
+  }
+
+  @Command('setrole')
+  async onSetRole(@Ctx() ctx: Context) {
+    console.log('» setrole: ctx.state.user =', ctx.state.user);
+    if (!requireRole(ctx, Role.ADMIN)) return;
+    const text = (ctx.message as any).text;
+    const parts = text.split(' ');
+    const tgId = parts[1];
+    const newRole = parts[2] as Role;
+    if (!tgId || ![Role.ADMIN, Role.OPERATOR].includes(newRole)) {
+      return ctx.reply('Использование: /setrole <telegramId> <ADMIN|OPERATOR>');
+    }
+
+    await this.prisma.user.update({
+      where: { telegramId: tgId },
+      data: { role: newRole },
+    });
+
+    ctx.reply(`✅ Пользователю ${tgId} присвоена роль ${newRole}`);
   }
 
   // Можно добавить 👇 для теста

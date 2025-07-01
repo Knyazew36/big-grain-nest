@@ -7,6 +7,8 @@ import { BotModule } from './bot/bot.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { PrismaModule } from 'nestjs-prisma';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './auth/guards/roles.guard';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -21,6 +23,14 @@ import { PrismaModule } from 'nestjs-prisma';
     ProductsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [
+    AppService,
+    PrismaService,
+
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}
