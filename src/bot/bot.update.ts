@@ -4,6 +4,7 @@ import { ProductsService } from 'src/products/products.service';
 import { Context } from 'telegraf';
 import { requireRole } from './utils/bot.utlis';
 import { Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Update()
 export class BotUpdate {

@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Request } from 'express';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class TelegramAuthGuard implements CanActivate {
