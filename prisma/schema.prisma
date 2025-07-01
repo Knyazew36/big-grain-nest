@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OPERATOR
+  ADMIN
+}
+
+model User {
+  id              Int                  @id @default(autoincrement())
+  telegramId      String               @unique
+  role            Role                 @default(OPERATOR)
+  reminders       Reminder[]
+  settings        NotificationSetting?
+  receipts        Receipt[]
+  shiftReports    ShiftReport[] // факт подтверждения смены
+  createdAt       DateTime             @default(now())
+  NotificationLog NotificationLog[]
+}
+
+model Product {
+  id           Int       @id @default(autoincrement())
+  name         String
+  quantity     Int
+  minThreshold Int
+  unit         String?
+  category     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  receipts     Receipt[]
+}
+
+model Receipt {
+  id         Int      @id @default(autoincrement())
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+  quantity   Int
+  operator   User?    @relation(fields: [operatorId], references: [id])
+  operatorId Int?
+  createdAt  DateTime @default(now())
+}
+
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  text      String
+  cron      String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model NotificationSetting {
+  id              Int  @id @default(autoincrement())
+  user            User @relation(fields: [userId], references: [id])
+  userId          Int  @unique
+  intervalMinutes Int  @default(30)
+  maxRetries      Int  @default(3)
+}
+
+model NotificationLog {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int
+  type          String
+  status        String
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model ShiftReport {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  date      DateTime // время подтверждения
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
