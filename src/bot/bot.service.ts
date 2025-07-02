@@ -12,8 +12,23 @@ export class BotService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    // регистрируем команды
+    await this.bot.telegram.setMyCommands([
+      { command: 'menu', description: 'Открыть главное меню' },
+      { command: 'add', description: 'Добавить товар' },
+      { command: 'inventory', description: 'Показать остатки' },
+    ]);
+
+    // подключаем middleware
     this.bot.use(async (ctx, next) => {
-      console.log('🐝 Middleware: got update from', ctx.from?.id);
+      // патчим reply через any, чтобы соответствовать оригинальному типу
+      const originalReply = (ctx as any).reply.bind(ctx);
+      (ctx as any).reply = async (text: string, extra?: any) => {
+        console.log('📤 reply →', text, extra);
+        return originalReply(text, extra);
+      };
+
+      // user upsert
       if (ctx.from?.id) {
         const tgId = String(ctx.from.id);
         const user = await this.prisma.user.upsert({
@@ -21,9 +36,9 @@ export class BotService implements OnModuleInit {
           update: {},
           create: { telegramId: tgId },
         });
-        console.log('🐝 Middleware: upserted user', user);
         ctx.state.user = user;
       }
+
       return next();
     });
   }

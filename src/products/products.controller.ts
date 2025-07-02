@@ -13,18 +13,22 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { TelegramAuthGuard } from 'src/auth/guards/telegram-auth.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
-@UseGuards(TelegramAuthGuard)
+// @UseGuards(TelegramAuthGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  async create(@Body() dto: CreateProductDto) {
+    await this.productsService.create(dto);
+    return true;
   }
 
   @Get()
+  // @Roles(Role.OPERATOR)
   findAll() {
     return this.productsService.findAll();
   }

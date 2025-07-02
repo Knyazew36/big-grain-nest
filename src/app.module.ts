@@ -8,6 +8,7 @@ import { ProductsModule } from './products/products.module';
 import { PrismaModule, PrismaService } from 'nestjs-prisma';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -26,10 +27,8 @@ import { RolesGuard } from './auth/guards/roles.guard';
     AppService,
     PrismaService,
 
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    // { provide: APP_GUARD, useClass: TelegramAuthGuard },
+    // { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}
