@@ -10,6 +10,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
 import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
+import { ShiftsModule } from './shifts/shifts.module';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -22,6 +23,7 @@ import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
     BotModule,
     AuthModule,
     ProductsModule,
+    ShiftsModule,
   ],
   controllers: [AppController],
   providers: [

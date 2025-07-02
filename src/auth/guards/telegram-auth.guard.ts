@@ -1,59 +1,54 @@
+// src/auth/guards/telegram-auth.guard.ts
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'nestjs-prisma';
-
+import { validate, parse } from '@telegram-apps/init-data-node';
 @Injectable()
 export class TelegramAuthGuard implements CanActivate {
   constructor(
-    private config: ConfigService,
-    private prisma: PrismaService,
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
-    const initData = request.headers['authorization'] as string;
-    if (!initData) {
-      throw new UnauthorizedException('No Telegram auth data');
+    const req = context.switchToHttp().getRequest<Request>();
+    const authHeader = String(req.header('authorization') || '');
+
+    // 1) Разбираем “tma <initDataRaw>”
+    const [authType, initDataRaw = ''] = authHeader.split(' ');
+    if (authType !== 'tma' || !initDataRaw) {
+      throw new UnauthorizedException('Invalid authorization header');
     }
 
-    console.dir(initData);
-
-    const params = new URLSearchParams(initData);
-    const data: Record<string, string> = {};
-    params.forEach((value, key) => (data[key] = value));
-
-    const hash = data['hash'];
-    if (!hash) {
-      throw new UnauthorizedException('Invalid auth data');
-    }
-    delete data['hash'];
-
-    const dataCheckString = Object.keys(data)
-      .sort()
-      .map((key) => `${key}=${data[key]}`)
-      .join('\n');
-
-    const botToken = this.config.get<string>('TG_BOT_TOKEN');
-    const secretKey = crypto.createHash('sha256').update(botToken).digest();
-    const computedHash = crypto
-      .createHmac('sha256', secretKey)
-      .update(dataCheckString)
-      .digest('hex');
-
-    if (computedHash !== hash) {
-      throw new UnauthorizedException('Data verification failed');
+    // 2) Проверяем подпись и срок жизни (по умолчанию 3600 сек)
+    const botToken = this.config.get<string>('TG_BOT_TOKEN') || '';
+    try {
+      validate(initDataRaw, botToken, { expiresIn: 3600 });
+    } catch (err: any) {
+      // сюда придёт ошибка как “Signature mismatch” или “Expired”
+      throw new UnauthorizedException(`InitData validation failed: ${err.message}`);
     }
 
-    const telegramId = data['id'];
-    // Upsert user
+    // 3) Парсим initData
+    let initData;
+    try {
+      initData = parse(initDataRaw);
+    } catch (err: any) {
+      throw new UnauthorizedException(`InitData parse failed: ${err.message}`);
+    }
+
+    // 4) Апсертим пользователя в БД
+    // initData.user.id — это number
+    const telegramId = String(initData.user.id);
     const user = await this.prisma.user.upsert({
       where: { telegramId },
       update: {},
       create: { telegramId },
     });
-    (request as any).user = user;
+
+    // 5) Кладём пользователя в request.user
+    (req as any).user = user;
     return true;
   }
 }

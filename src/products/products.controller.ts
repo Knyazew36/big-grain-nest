@@ -16,7 +16,7 @@ import { TelegramAuthGuard } from 'src/auth/guards/telegram-auth.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 
-// @UseGuards(TelegramAuthGuard)
+@UseGuards(TelegramAuthGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

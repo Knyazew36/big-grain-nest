@@ -82,10 +82,10 @@ model NotificationLog {
 }
 
 model ShiftReport {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  date      DateTime // время подтверждения
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  consumptions Json // [ { productId: number, consumed: number }, … ]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  User         User     @relation(fields: [userId], references: [id])
 }
