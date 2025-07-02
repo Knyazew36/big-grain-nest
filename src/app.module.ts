@@ -6,9 +6,10 @@ import { BotModule } from './bot/bot.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { PrismaModule, PrismaService } from 'nestjs-prisma';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
+import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -26,6 +27,10 @@ import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
   providers: [
     AppService,
     PrismaService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
 
     // { provide: APP_GUARD, useClass: TelegramAuthGuard },
     // { provide: APP_GUARD, useClass: RolesGuard },

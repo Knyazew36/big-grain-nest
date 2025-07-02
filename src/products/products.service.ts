@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'nestjs-prisma';
+import { Product } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
@@ -11,7 +12,7 @@ export class ProductsService {
     return this.prisma.product.create({ data: dto });
   }
 
-  async findAll() {
+  async findAll(): Promise<Product[]> {
     return this.prisma.product.findMany({ orderBy: { name: 'asc' } });
   }
 
