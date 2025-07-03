@@ -36,14 +36,15 @@ model User {
 
 model Product {
   id           Int       @id @default(autoincrement())
-  name         String
+  name         String    @unique
   quantity     Int
   minThreshold Int
-  unit         String?
+  unit         String?   @default("ед")
   category     String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   receipts     Receipt[]
+  active       Boolean   @default(true)
 }
 
 model Receipt {

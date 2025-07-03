@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -16,7 +17,7 @@ import { TelegramAuthGuard } from 'src/auth/guards/telegram-auth.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 
-@UseGuards(TelegramAuthGuard)
+// // @UseGuards(TelegramAuthGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -29,8 +30,10 @@ export class ProductsController {
 
   @Get()
   // @Roles(Role.OPERATOR)
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query('onlyActive') onlyActive?: string) {
+    // По умолчанию true, если явно передано onlyActive=false — показываем все
+    const only = onlyActive === 'false' ? false : true;
+    return this.productsService.findAll(only);
   }
 
   @Get(':id')
@@ -38,7 +41,7 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Post('update/:id')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
     return this.productsService.update(id, dto);
   }

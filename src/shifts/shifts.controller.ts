@@ -10,14 +10,14 @@ export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Post()
-  @UseGuards(TelegramAuthGuard)
+  // @UseGuards(TelegramAuthGuard)
   async create(@Body() dto: CreateShiftReportDto, @User() user: UserType) {
     const shift = await this.shiftsService.createShiftReport(user.id, dto.consumptions);
     return { data: shift };
   }
 
   @Get()
-  @UseGuards(TelegramAuthGuard)
+  // @UseGuards(TelegramAuthGuard)
   async findAll() {
     return { data: await this.shiftsService.findAll() };
   }

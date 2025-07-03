@@ -19,8 +19,11 @@ export class ProductsService {
     return this.prisma.product.create({ data: dto });
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.prisma.product.findMany({ orderBy: { name: 'asc' } });
+  async findAll(onlyActive = true): Promise<Product[]> {
+    return this.prisma.product.findMany({
+      where: onlyActive ? { active: true } : undefined,
+      orderBy: { name: 'asc' },
+    });
   }
 
   async findOne(id: number) {
@@ -40,7 +43,8 @@ export class ProductsService {
   }
 
   // @Cron(CronExpression.EVERY_HOUR)
-  @Cron(CronExpression.EVERY_MINUTE)
+  //FIXME: не забыть
+  // @Cron(CronExpression.EVERY_MINUTE)
   async checkLowStockAndNotify() {
     console.log('🔍 checkLowStockAndNotify');
     // Prisma не поддерживает сравнение с другим полем напрямую, поэтому фильтруем вручную
