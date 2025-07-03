@@ -12,6 +12,7 @@ import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
 import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
 import { ShiftsModule } from './shifts/shifts.module';
 import { ReceiptsModule } from './receipts/receipts.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -26,6 +27,7 @@ import { ReceiptsModule } from './receipts/receipts.module';
     ProductsModule,
     ShiftsModule,
     ReceiptsModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

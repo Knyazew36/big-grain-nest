@@ -3,10 +3,17 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'nestjs-prisma';
 import { Product } from '@prisma/client';
+import { BotService } from '../bot/bot.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly botService: BotService,
+  ) {
+    console.log('🟢 ProductsService создан', new Date().toISOString());
+  }
 
   async create(dto: CreateProductDto) {
     return this.prisma.product.create({ data: dto });
@@ -30,5 +37,17 @@ export class ProductsService {
   async remove(id: number) {
     await this.findOne(id);
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  // @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_MINUTE)
+  async checkLowStockAndNotify() {
+    console.log('🔍 checkLowStockAndNotify');
+    // Prisma не поддерживает сравнение с другим полем напрямую, поэтому фильтруем вручную
+    const allProducts = await this.prisma.product.findMany();
+    const lowStock = allProducts.filter((p) => p.quantity < p.minThreshold);
+    if (lowStock.length > 0) {
+      await this.botService.notifyLowStock(lowStock);
+    }
   }
 }

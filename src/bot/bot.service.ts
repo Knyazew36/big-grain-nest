@@ -3,6 +3,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf, Context as TelegrafContext } from 'telegraf';
+import { Product } from '@prisma/client';
 
 @Injectable()
 export class BotService implements OnModuleInit {
@@ -41,5 +42,23 @@ export class BotService implements OnModuleInit {
 
       return next();
     });
+  }
+
+  async notifyLowStock(products: Product[]) {
+    if (!products.length) return;
+    const message =
+      '⚠️ Низкий остаток по продуктам:\n' +
+      products.map((p) => `• ${p.name}: ${p.quantity} (минимум: ${p.minThreshold})`).join('\n');
+    // Получаем всех пользователей (например, с ролью admin, либо всех)
+    const users = await this.prisma.user.findMany();
+    for (const user of users) {
+      if (user.telegramId) {
+        try {
+          await this.bot.telegram.sendMessage(user.telegramId, message);
+        } catch (e) {
+          console.error('Ошибка отправки уведомления:', e);
+        }
+      }
+    }
   }
 }
