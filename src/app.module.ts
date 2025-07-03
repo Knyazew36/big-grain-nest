@@ -11,6 +11,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
 import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
 import { ShiftsModule } from './shifts/shifts.module';
+import { ReceiptsModule } from './receipts/receipts.module';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -24,6 +25,7 @@ import { ShiftsModule } from './shifts/shifts.module';
     AuthModule,
     ProductsModule,
     ShiftsModule,
+    ReceiptsModule,
   ],
   controllers: [AppController],
   providers: [
