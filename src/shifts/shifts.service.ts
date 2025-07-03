@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
+import { ConsumptionDto } from './dto/create-shift-report.dto';
 
 @Injectable()
 export class ShiftsService {
@@ -8,14 +9,20 @@ export class ShiftsService {
   /**
    * Создаёт ShiftReport и уменьшает остатки для каждого продукта
    */
-  async createShiftReport(userId: number, consumptions: { productId: number; consumed: number }[]) {
+  async createShiftReport(userId: number, consumptions: ConsumptionDto[]) {
     return this.prisma.$transaction(async (tx) => {
       // 1) Проверяем, что не было отчёта с точно таким же userId+createdAt (при необходимости)
       //    (для MVP пропустим дубли)
 
       // 2) Создаём отчёт
       const shift = await tx.shiftReport.create({
-        data: { userId, consumptions },
+        data: {
+          userId,
+          consumptions: consumptions.map((c) => ({
+            productId: c.productId,
+            consumed: c.consumed,
+          })),
+        },
       });
 
       // 3) Обновляем остатки товаров
@@ -36,6 +43,15 @@ export class ShiftsService {
       }
 
       return shift;
+    });
+  }
+
+  async findAll() {
+    return this.prisma.shiftReport.findMany({
+      include: {
+        User: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

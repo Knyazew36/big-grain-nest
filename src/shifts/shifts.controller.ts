@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get } from '@nestjs/common';
 import { CreateShiftReportDto } from './dto/create-shift-report.dto';
 import { ShiftsService } from './shifts.service';
 import { TelegramAuthGuard } from 'src/auth/guards/telegram-auth.guard';
@@ -14,5 +14,11 @@ export class ShiftsController {
   async create(@Body() dto: CreateShiftReportDto, @User() user: UserType) {
     const shift = await this.shiftsService.createShiftReport(user.id, dto.consumptions);
     return { data: shift };
+  }
+
+  @Get()
+  @UseGuards(TelegramAuthGuard)
+  async findAll() {
+    return { data: await this.shiftsService.findAll() };
   }
 }
