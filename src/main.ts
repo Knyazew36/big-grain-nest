@@ -10,7 +10,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['http://localhost:3000', process.env.WEBAPP_URL, 'https://big-grain-tg.vercel.app'], // Явно указываем разрешённый origin
+    origin: [
+      'http://localhost:3000',
+      process.env.WEBAPP_URL,
+      'https://big-grain-tg.vercel.app',
+      'https://front-test.devmill.ru',
+    ], // Явно указываем разрешённый origin
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
