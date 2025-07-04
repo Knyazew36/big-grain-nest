@@ -37,5 +37,6 @@ import { NextFunction } from 'express';
     }),
   ],
   providers: [PrismaService, BotUpdate, BotService],
+  exports: [BotUpdate, BotService],
 })
 export class BotModule {}

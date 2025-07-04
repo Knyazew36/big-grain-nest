@@ -60,4 +60,8 @@ export class AuthService {
 
     return user;
   }
+
+  async findByTelegramId(telegramId: string) {
+    return this.prisma.user.findUnique({ where: { telegramId } });
+  }
 }

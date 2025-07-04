@@ -115,6 +115,31 @@ export class BotUpdate {
     await this.showMenu(ctx);
   }
 
+  @Action(/approve_access:(.+)/)
+  async onApproveAccess(@Ctx() ctx: Context) {
+    const data = (ctx.callbackQuery as any)?.data as string | undefined;
+    const telegramId = data?.split(':')[1];
+    if (!telegramId) {
+      await ctx.reply('Ошибка: не удалось определить пользователя.');
+      return;
+    }
+    await this.prisma.user.update({ where: { telegramId }, data: { role: 'OPERATOR' } });
+    await ctx.reply('✅ Доступ одобрен.');
+    // Можно уведомить пользователя, если нужно
+  }
+
+  @Action(/decline_access:(.+)/)
+  async onDeclineAccess(@Ctx() ctx: Context) {
+    const data = (ctx.callbackQuery as any)?.data as string | undefined;
+    const telegramId = data?.split(':')[1];
+    if (!telegramId) {
+      await ctx.reply('Ошибка: не удалось определить пользователя.');
+      return;
+    }
+    await ctx.reply('❌ Доступ отклонён.');
+    // Можно уведомить пользователя, если нужно
+  }
+
   private async ensureUser(ctx: Context) {
     if (ctx.from?.id) {
       const tgId = String(ctx.from.id);

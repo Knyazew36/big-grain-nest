@@ -8,7 +8,7 @@ import { PrismaModule } from 'nestjs-prisma';
 import { BotModule } from 'src/bot/bot.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule],
+  imports: [ConfigModule, PrismaModule, BotModule],
 
   controllers: [AuthController],
   providers: [PrismaService, AuthService, TelegramAuthGuard, ConfigService],
