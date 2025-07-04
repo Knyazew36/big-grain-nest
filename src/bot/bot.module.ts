@@ -1,9 +1,9 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { InjectBot, TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
+import { Module } from '@nestjs/common';
+import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { BotUpdate } from './bot.update';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule, PrismaService } from 'nestjs-prisma';
-import { Context, Telegraf } from 'telegraf';
+import { Context } from 'telegraf';
 import { ProductsModule } from 'src/products/products.module';
 import { BotService } from './bot.service';
 import { NextFunction } from 'express';

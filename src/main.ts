@@ -12,13 +12,14 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
+      'http://localhost:5173',
       process.env.WEBAPP_URL,
       'https://big-grain-tg.vercel.app',
       'https://front-test.devmill.ru',
     ], // Явно указываем разрешённый origin
     credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    // allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.setGlobalPrefix('api');
@@ -48,6 +49,6 @@ async function bootstrap() {
     }),
   );
 
-  app.listen(53428);
+  app.listen(10005);
 }
 bootstrap();
