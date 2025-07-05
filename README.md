@@ -71,3 +71,47 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+# Big Grain Nest
+
+## Автоматическое включение роли пользователя в ответы
+
+Начиная с версии X.X.X, все API ответы автоматически включают информацию о пользователе, если он аутентифицирован через Telegram.
+
+### Структура ответа
+
+```json
+{
+  "status": "success",
+  "data": { /* ваши данные */ },
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "user": {
+    "id": 1,
+    "role": "OPERATOR",
+    "telegramId": "123456789"
+  }
+}
+```
+
+### Исключение информации о пользователе
+
+Если вы хотите исключить информацию о пользователе из конкретного эндпоинта, используйте декоратор `@ExcludeUserInfo()`:
+
+```typescript
+import { ExcludeUserInfo } from 'src/auth/interceptors/response.interceptor';
+
+@Controller('products')
+export class ProductsController {
+  @Get()
+  @ExcludeUserInfo() // Исключает информацию о пользователе из ответа
+  findAll() {
+    return this.productsService.findAll();
+  }
+}
+```
+
+### Доступные роли
+
+- `GUEST` - Гость (по умолчанию)
+- `OPERATOR` - Оператор
+- `ADMIN` - Администратор
