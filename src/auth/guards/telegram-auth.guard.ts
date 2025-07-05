@@ -44,10 +44,15 @@ export class TelegramAuthGuard implements CanActivate {
     const telegramId = String(initData.user.id);
     const user = await this.prisma.user.upsert({
       where: { telegramId },
-      update: { data: initData?.user },
-      create: { telegramId, data: initData?.user },
+      update: {
+        data: initData?.user,
+      },
+      create: {
+        telegramId,
+        data: initData?.user,
+      },
     });
-
+    console.log('user telegram', user);
     // 5) Кладём пользователя в request.user
     (req as any).user = user;
     return true;

@@ -14,6 +14,7 @@ import { ShiftsModule } from './shifts/shifts.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { UserModule } from './user/user.module';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -24,6 +25,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
       ignoreEnvFile: false, // не игнорировать .env
     }),
     BotModule,
+    UserModule,
     AuthModule,
     ProductsModule,
     ShiftsModule,
