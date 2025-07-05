@@ -53,6 +53,6 @@ async function bootstrap() {
     }),
   );
 
-  app.listen(10005);
+  app.listen(10002);
 }
 bootstrap();
