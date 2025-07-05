@@ -3,7 +3,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'nestjs-prisma';
-import { validate, parse } from '@telegram-apps/init-data-node';
+import { validate, parse, User } from '@telegram-apps/init-data-node';
 @Injectable()
 export class TelegramAuthGuard implements CanActivate {
   constructor(
@@ -44,8 +44,8 @@ export class TelegramAuthGuard implements CanActivate {
     const telegramId = String(initData.user.id);
     const user = await this.prisma.user.upsert({
       where: { telegramId },
-      update: {},
-      create: { telegramId },
+      update: { data: initData?.user },
+      create: { telegramId, data: initData?.user },
     });
 
     // 5) Кладём пользователя в request.user

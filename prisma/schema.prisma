@@ -20,12 +20,10 @@ enum Role {
 }
 
 model User {
-  id              Int                  @id @default(autoincrement())
-  telegramId      String               @unique
-  firstName       String?
-  lastName        String?
-  username        String?
-  rawData         Json?
+  id         Int    @id @default(autoincrement())
+  telegramId String @unique
+
+  data            Json?
   role            Role                 @default(GUEST)
   reminders       Reminder[]
   settings        NotificationSetting?

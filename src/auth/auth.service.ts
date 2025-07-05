@@ -49,13 +49,11 @@ export class AuthService {
 
     // апсертим пользователя
     const telegramId = data.id;
-    const firstName = data.first_name || '';
-    const lastName = data.last_name || '';
-    const username = data.username || '';
+
     const user = await this.prisma.user.upsert({
       where: { telegramId },
-      update: { firstName, lastName, username, rawData: data },
-      create: { telegramId, firstName, lastName, username, rawData: data },
+      update: { data },
+      create: { telegramId, data },
     });
 
     return user;
