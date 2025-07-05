@@ -50,12 +50,12 @@ model Product {
 
 model Receipt {
   id         Int      @id @default(autoincrement())
-  product    Product  @relation(fields: [productId], references: [id])
-  productId  Int
-  quantity   Int
   operator   User?    @relation(fields: [operatorId], references: [id])
   operatorId Int?
+  receipts   Json // [{ productId: number, quantity: number }]
   createdAt  DateTime @default(now())
+  Product    Product? @relation(fields: [productId], references: [id])
+  productId  Int?
 }
 
 model Reminder {

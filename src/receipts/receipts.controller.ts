@@ -10,7 +10,6 @@ export class ReceiptsController {
   constructor(private readonly receiptsService: ReceiptsService) {}
 
   @Post()
-  //FIXME: вернуть
   @UseGuards(TelegramAuthGuard)
   async create(@Body() dto: CreateReceiptDto, @User() user: UserType) {
     const receipt = await this.receiptsService.createReceipt(user.id, dto);

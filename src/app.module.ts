@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, NestModule, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -13,6 +13,7 @@ import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
 import { ShiftsModule } from './shifts/shifts.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 @Module({
   imports: [
     PrismaModule.forRoot(),
@@ -42,4 +43,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     // { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

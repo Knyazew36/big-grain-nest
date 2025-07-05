@@ -13,13 +13,17 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://localhost:5173',
+      'https://localhost:5173',
+      'https://localhost:5173/',
       process.env.WEBAPP_URL,
       'https://big-grain-tg.vercel.app',
       'https://front-test.devmill.ru',
-    ], // Явно указываем разрешённый origin
+    ],
     credentials: true,
-    // methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    // allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   app.setGlobalPrefix('api');

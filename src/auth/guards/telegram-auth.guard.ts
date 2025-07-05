@@ -24,7 +24,8 @@ export class TelegramAuthGuard implements CanActivate {
     // 2) Проверяем подпись и срок жизни (по умолчанию 3600 сек)
     const botToken = this.config.get<string>('TG_BOT_TOKEN') || '';
     try {
-      validate(initDataRaw, botToken, { expiresIn: 3600 });
+      validate(initDataRaw, botToken);
+      // validate(initDataRaw, botToken, { expiresIn: 3600 });
     } catch (err: any) {
       // сюда придёт ошибка как “Signature mismatch” или “Expired”
       throw new UnauthorizedException(`InitData validation failed: ${err.message}`);

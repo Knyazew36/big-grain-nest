@@ -26,21 +26,30 @@ export class ReceiptsService {
 
   async createReceipt(userId: number, dto: CreateReceiptDto) {
     return this.prisma.$transaction(async (tx) => {
-      const product = await tx.product.findUnique({ where: { id: dto.productId } });
-      if (!product) {
-        throw new BadRequestException('Товар не найден');
+      // Проверяем, что все товары существуют
+      for (const receiptItem of dto.receipts) {
+        const product = await tx.product.findUnique({ where: { id: receiptItem.productId } });
+        if (!product) {
+          throw new BadRequestException(`Товар с ID ${receiptItem.productId} не найден`);
+        }
       }
+
+      // Создаём чек одной записью с массивом товаров
       const receipt = await tx.receipt.create({
         data: {
-          productId: dto.productId,
-          quantity: dto.quantity,
           operatorId: userId,
+          receipts: JSON.stringify(dto.receipts),
         },
       });
-      await tx.product.update({
-        where: { id: dto.productId },
-        data: { quantity: { increment: dto.quantity } },
-      });
+
+      // Обновляем остатки
+      for (const receiptItem of dto.receipts) {
+        await tx.product.update({
+          where: { id: receiptItem.productId },
+          data: { quantity: { increment: receiptItem.quantity } },
+        });
+      }
+
       return receipt;
     });
   }
@@ -86,20 +95,29 @@ export class ReceiptsService {
     const productMap = new Map(products.map((p) => [p.id, p]));
     const userMap = new Map(users.map((u) => [u.id, u]));
 
-    // Приходы
-    const incomes = receipts.map((r) => ({
-      type: 'income' as const,
-      date: r.createdAt,
-      user: userMap.get(r.operatorId) || null,
-      products: [
-        {
-          product: productMap.get(r.productId) || null,
-          quantity: r.quantity,
-        },
-      ],
-    }));
+    // Приходы (чек — одна запись, товары — массив)
+    const incomes = receipts.map((r) => {
+      let items: { product: any; quantity: number }[] = [];
+      try {
+        let raw = r.receipts;
+        if (typeof raw === 'string') raw = JSON.parse(raw);
+        if (!Array.isArray(raw)) raw = [];
+        items = raw.map((c: any) => ({
+          product: productMap.get(c.productId) || null,
+          quantity: c.quantity,
+        }));
+      } catch {
+        items = [];
+      }
+      return {
+        type: 'income' as const,
+        date: r.createdAt,
+        user: userMap.get(r.operatorId) || null,
+        products: items,
+      };
+    });
 
-    // Расходы
+    // Расходы (как раньше)
     const outcomes = shiftReports.map((sr) => {
       const user = userMap.get(sr.userId) || null;
       let consumptions: { product: any; quantity: number }[] = [];
