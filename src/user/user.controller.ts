@@ -40,6 +40,11 @@ export class UserController {
     return this.usersService.getUsersByRole(role);
   }
 
+  @Get(':id/role')
+  getUserRole(@Param('id') id: string) {
+    return this.usersService.getUserRole(+id);
+  }
+
   @Get(':id')
   @Roles(Role.ADMIN)
   findOne(@Param('id') id: string) {

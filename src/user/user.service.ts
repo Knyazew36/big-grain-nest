@@ -75,4 +75,9 @@ export class UserService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getUserRole(id: number): Promise<{ role: Role }> {
+    const user = await this.findOne(id);
+    return { role: user.role };
+  }
 }
