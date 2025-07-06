@@ -76,7 +76,7 @@ export class BotService implements OnModuleInit {
    */
   async sendMessage(telegramId: string, message: string, extra?: any) {
     try {
-      return await this.bot.telegram.sendMessage(telegramId, message, extra);
+      await this.bot.telegram.sendMessage(telegramId, message, extra);
     } catch (error) {
       console.error(`Ошибка отправки сообщения пользователю ${telegramId}:`, error);
       throw error;
