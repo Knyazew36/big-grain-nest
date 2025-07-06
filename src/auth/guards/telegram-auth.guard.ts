@@ -21,8 +21,16 @@ export class TelegramAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid authorization header');
     }
 
+    const nodeEnv = this.config.get<string>('NODE_ENV') || 'development';
+    const isDev = nodeEnv === 'development';
+
+    const devToken = this.config.get<string>('TG_BOT_TOKEN_DEV');
+    const prodToken = this.config.get<string>('TG_BOT_TOKEN');
+
+    const token = isDev ? devToken : prodToken;
+
     // 2) Проверяем подпись и срок жизни (по умолчанию 3600 сек)
-    const botToken = this.config.get<string>('TG_BOT_TOKEN') || '';
+    const botToken = token;
     try {
       validate(initDataRaw, botToken);
       // validate(initDataRaw, botToken, { expiresIn: 3600 });
@@ -52,7 +60,7 @@ export class TelegramAuthGuard implements CanActivate {
         data: initData?.user,
       },
     });
-    console.log('user telegram', user);
+    // console.log('user telegram', user);
     // 5) Кладём пользователя в request.user
     (req as any).user = user;
     return true;

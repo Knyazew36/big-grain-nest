@@ -36,8 +36,16 @@ export class AuthService {
       .join('\n');
 
     // считаем HMAC
-    const botToken = this.config.get<string>('TG_BOT_TOKEN');
-    const secretKey = crypto.createHash('sha256').update(botToken).digest();
+
+    const nodeEnv = this.config.get<string>('NODE_ENV') || 'development';
+    const isDev = nodeEnv === 'development';
+
+    const devToken = this.config.get<string>('TG_BOT_TOKEN_DEV');
+    const prodToken = this.config.get<string>('TG_BOT_TOKEN');
+
+    const token = isDev ? devToken : prodToken;
+
+    const secretKey = crypto.createHash('sha256').update(token).digest();
     const computedHash = crypto
       .createHmac('sha256', secretKey)
       .update(dataCheckString)

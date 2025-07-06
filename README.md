@@ -32,6 +32,33 @@
 $ yarn install
 ```
 
+## Environment Variables
+
+Создайте файл `.env` в корне проекта со следующими переменными:
+
+```env
+# Environment
+NODE_ENV=development
+
+# Telegram Bot Tokens
+TG_BOT_TOKEN=your_production_bot_token_here
+TG_BOT_TOKEN_DEV=your_development_bot_token_here
+
+# Other environment variables can be added here
+```
+
+### Описание переменных
+
+- `NODE_ENV` - Окружение приложения (`development` или `production`)
+- `TG_BOT_TOKEN` - Токен бота для production окружения
+- `TG_BOT_TOKEN_DEV` - Токен бота для development окружения
+
+**Важно:** В development режиме используется `TG_BOT_TOKEN_DEV`, в production - `TG_BOT_TOKEN`.
+
+### Кроссплатформенная поддержка
+
+Проект использует `cross-env` для корректной работы с переменными окружения на всех платформах (Windows, macOS, Linux).
+
 ## Running the app
 
 ```bash

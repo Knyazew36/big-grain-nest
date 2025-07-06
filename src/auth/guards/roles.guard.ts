@@ -19,8 +19,7 @@ export class RolesGuard implements CanActivate {
 
     const req = ctx.switchToHttp().getRequest();
     const user = req.user; // заполняется TelegramAuthGuard
-    console.log('required', required);
-    console.log('user role', user);
+
     if (!user || !required.includes(user.role)) {
       throw new ForbiddenException('Недостаточно прав');
     }
