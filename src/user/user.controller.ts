@@ -40,9 +40,9 @@ export class UserController {
     return this.usersService.getUsersByRole(role);
   }
 
-  @Get(':id/role')
-  getUserRole(@Param('id') id: string) {
-    return this.usersService.getUserRole(+id);
+  @Get(':telegramId/role')
+  getUserRole(@Param('telegramId') telegramId: string) {
+    return this.usersService.getUserRole(telegramId);
   }
 
   @Get(':id')
