@@ -57,7 +57,7 @@ export class UserController {
     return this.usersService.update(+id, updateUserDto);
   }
 
-  @Delete(':id')
+  @Post('/remove/:id')
   @Roles('ADMIN', 'OWNER', 'IT')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);

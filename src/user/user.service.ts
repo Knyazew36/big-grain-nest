@@ -55,7 +55,12 @@ export class UserService {
 
   async remove(id: number): Promise<User> {
     await this.findOne(id);
-    return this.prisma.user.delete({ where: { id } });
+    // return this.prisma.user.delete({ where: { id } });
+    // Мягкое удаление - помечаем пользователя как неактивного
+    return this.prisma.user.update({
+      where: { id },
+      data: { active: false, role: Role.GUEST },
+    });
   }
 
   async getEmployees(): Promise<User[]> {

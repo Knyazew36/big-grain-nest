@@ -98,8 +98,15 @@ export class AuthService {
   /**
    * Получить все заявки (для админа)
    */
-  async getAllAccessRequests() {
+  async getAllAccessRequests(status?: string) {
+    const where: any = {};
+
+    if (status) {
+      where.status = status;
+    }
+
     return this.prisma.accessRequest.findMany({
+      where,
       include: { user: true, processedBy: true },
       orderBy: { createdAt: 'desc' },
     });

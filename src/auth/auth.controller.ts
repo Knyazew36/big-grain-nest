@@ -59,8 +59,18 @@ export class AuthController {
   @Post('access-requests')
   @UseGuards(TelegramAuthGuard, RolesGuard)
   @Roles('ADMIN', 'OWNER', 'IT')
-  async getAllAccessRequests() {
-    return this.authService.getAllAccessRequests();
+  async getAllAccessRequests(@Body('status') status?: string) {
+    return this.authService.getAllAccessRequests(status);
+  }
+
+  /**
+   * Новый эндпоинт: получить только PENDING заявки (для админа)
+   */
+  @Post('pending-access-requests')
+  @UseGuards(TelegramAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'OWNER', 'IT')
+  async getPendingAccessRequests() {
+    return this.authService.getAllAccessRequests('PENDING');
   }
 
   /**
