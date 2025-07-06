@@ -106,6 +106,76 @@ export class AuthService {
   }
 
   /**
+   * Отклонить заявку на доступ
+   */
+  async declineAccessRequest(requestId: number, adminTelegramId: string, adminNote?: string) {
+    const admin = await this.findByTelegramId(adminTelegramId);
+    if (!admin) throw new UnauthorizedException('Admin not found');
+
+    const request = await this.prisma.accessRequest.findUnique({
+      where: { id: requestId },
+      include: { user: true },
+    });
+
+    if (!request) {
+      throw new UnauthorizedException('Access request not found');
+    }
+
+    if (request.status !== 'PENDING') {
+      throw new UnauthorizedException('Access request is not pending');
+    }
+
+    return this.prisma.accessRequest.update({
+      where: { id: requestId },
+      data: {
+        status: 'DECLINED',
+        adminNote,
+        processedAt: new Date(),
+        processedById: admin.id,
+      },
+      include: { user: true, processedBy: true },
+    });
+  }
+
+  /**
+   * Одобрить заявку на доступ
+   */
+  async approveAccessRequest(requestId: number, adminTelegramId: string, adminNote?: string) {
+    const admin = await this.findByTelegramId(adminTelegramId);
+    if (!admin) throw new UnauthorizedException('Admin not found');
+
+    const request = await this.prisma.accessRequest.findUnique({
+      where: { id: requestId },
+      include: { user: true },
+    });
+
+    if (!request) {
+      throw new UnauthorizedException('Access request not found');
+    }
+
+    if (request.status !== 'PENDING') {
+      throw new UnauthorizedException('Access request is not pending');
+    }
+
+    // Обновляем роль пользователя на OPERATOR
+    await this.prisma.user.update({
+      where: { id: request.userId },
+      data: { role: 'OPERATOR' },
+    });
+
+    return this.prisma.accessRequest.update({
+      where: { id: requestId },
+      data: {
+        status: 'APPROVED',
+        adminNote,
+        processedAt: new Date(),
+        processedById: admin.id,
+      },
+      include: { user: true, processedBy: true },
+    });
+  }
+
+  /**
    * Проверить, есть ли заявка у пользователя
    */
   async getUserAccessRequests(telegramId: string) {

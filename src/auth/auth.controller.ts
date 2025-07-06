@@ -5,6 +5,7 @@ import { CreateAccessRequestDto } from './dto/create-access-request.dto';
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
+import { TelegramAuthGuard } from './guards/telegram-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -56,10 +57,38 @@ export class AuthController {
    * Новый эндпоинт: получить все заявки (для админа)
    */
   @Post('access-requests')
-  @UseGuards(RolesGuard)
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Roles('ADMIN', 'OWNER', 'IT')
   async getAllAccessRequests() {
     return this.authService.getAllAccessRequests();
+  }
+
+  /**
+   * Новый эндпоинт: отклонить заявку на доступ (только для админа)
+   */
+  @Post('decline-access-request')
+  @UseGuards(TelegramAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'OWNER', 'IT')
+  async declineAccessRequest(
+    @Body('requestId') requestId: number,
+    @Body('adminTelegramId') adminTelegramId: string,
+    @Body('adminNote') adminNote?: string,
+  ) {
+    return this.authService.declineAccessRequest(requestId, adminTelegramId, adminNote);
+  }
+
+  /**
+   * Новый эндпоинт: одобрить заявку на доступ (только для админа)
+   */
+  @Post('approve-access-request')
+  @UseGuards(TelegramAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'OWNER', 'IT')
+  async approveAccessRequest(
+    @Body('requestId') requestId: number,
+    @Body('adminTelegramId') adminTelegramId: string,
+    @Body('adminNote') adminNote?: string,
+  ) {
+    return this.authService.approveAccessRequest(requestId, adminTelegramId, adminNote);
   }
 
   /**
@@ -74,7 +103,7 @@ export class AuthController {
    * Новый эндпоинт: заблокировать пользователя (только для админа)
    */
   @Post('block-user')
-  @UseGuards(RolesGuard)
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Roles('ADMIN', 'OWNER', 'IT')
   async blockUser(@Body('telegramId') telegramId: string, @Body('adminNote') adminNote?: string) {
     return this.authService.blockUser(telegramId, adminNote);
@@ -84,7 +113,7 @@ export class AuthController {
    * Новый эндпоинт: разблокировать пользователя (только для админа)
    */
   @Post('unblock-user')
-  @UseGuards(RolesGuard)
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Roles('ADMIN', 'OWNER', 'IT')
   async unblockUser(@Body('telegramId') telegramId: string) {
     return this.authService.unblockUser(telegramId);
