@@ -51,7 +51,7 @@ export class UserController {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Post('/update/:id')
   @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
