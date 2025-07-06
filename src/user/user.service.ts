@@ -18,7 +18,7 @@ export class UserService {
     // Если запрошены только сотрудники, фильтруем по ролям OPERATOR и ADMIN
     if (onlyEmployees) {
       whereClause.role = {
-        in: [Role.OPERATOR, Role.ADMIN],
+        not: [Role.GUEST, Role.BLOCKED],
       };
     }
 
@@ -62,7 +62,7 @@ export class UserService {
     return this.prisma.user.findMany({
       where: {
         role: {
-          in: [Role.OPERATOR, Role.ADMIN],
+          in: [Role.OPERATOR, Role.ADMIN, Role.OWNER],
         },
       },
       orderBy: { createdAt: 'desc' },
