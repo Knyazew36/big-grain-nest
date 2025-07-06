@@ -77,7 +77,10 @@ export class UserService {
   }
 
   async getUserRole(id: number): Promise<{ role: Role }> {
-    const user = await this.findOne(id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User #${id} not found`);
+    }
     return { role: user.role };
   }
 }
