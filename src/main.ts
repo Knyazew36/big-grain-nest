@@ -2,9 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'dotenv/config';
 // import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-// import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-// import { AllExceptionsFilter } from './common/filters/exception.filter';
-// import { ValidationPipe } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+
 import { AllExceptionsFilter } from './common/fitlers/exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
@@ -28,8 +27,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // const winstonLogger = app.get(WINSTON_MODULE_NEST_PROVIDER);
-  // app.useLogger(winstonLogger);
+  const winstonLogger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.useLogger(winstonLogger);
   // app.use(cookieParser());
   //swagger
   // const config = new DocumentBuilder()
