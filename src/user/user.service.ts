@@ -76,10 +76,10 @@ export class UserService {
     });
   }
 
-  async getUserRole(id: number): Promise<{ role: Role }> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+  async getUserRole(telegramId: string): Promise<{ role: Role }> {
+    const user = await this.prisma.user.findUnique({ where: { telegramId } });
     if (!user) {
-      throw new NotFoundException(`User #${id} not found`);
+      throw new NotFoundException(`User #${telegramId} not found`);
     }
     return { role: user.role };
   }
