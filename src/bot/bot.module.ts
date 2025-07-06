@@ -7,6 +7,7 @@ import { Context } from 'telegraf';
 import { ProductsModule } from 'src/products/products.module';
 import { BotService } from './bot.service';
 import { NextFunction } from 'express';
+import { NotificationService } from './notification.service';
 
 @Module({
   imports: [
@@ -57,7 +58,7 @@ import { NextFunction } from 'express';
       },
     }),
   ],
-  providers: [PrismaService, BotUpdate, BotService],
-  exports: [BotUpdate, BotService],
+  providers: [PrismaService, BotUpdate, BotService, NotificationService],
+  exports: [BotUpdate, BotService, NotificationService],
 })
 export class BotModule {}

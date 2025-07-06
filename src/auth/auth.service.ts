@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { AccessRequest } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from 'nestjs-prisma';
+import { NotificationService } from '../bot/notification.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -132,7 +134,7 @@ export class AuthService {
       throw new UnauthorizedException('Access request is not pending');
     }
 
-    return this.prisma.accessRequest.update({
+    const updatedRequest = await this.prisma.accessRequest.update({
       where: { id: requestId },
       data: {
         status: 'DECLINED',
@@ -142,6 +144,18 @@ export class AuthService {
       },
       include: { user: true, processedBy: true },
     });
+
+    // Отправляем уведомление пользователю
+    try {
+      await this.notificationService.notifyAccessRequestDeclined(
+        request.user.telegramId,
+        adminNote,
+      );
+    } catch (error) {
+      console.error('Ошибка отправки уведомления об отклонении заявки:', error);
+    }
+
+    return updatedRequest;
   }
 
   /**
@@ -170,7 +184,7 @@ export class AuthService {
       data: { role: 'OPERATOR' },
     });
 
-    return this.prisma.accessRequest.update({
+    const updatedRequest = await this.prisma.accessRequest.update({
       where: { id: requestId },
       data: {
         status: 'APPROVED',
@@ -180,6 +194,18 @@ export class AuthService {
       },
       include: { user: true, processedBy: true },
     });
+
+    // Отправляем уведомление пользователю с кнопкой для открытия webapp
+    try {
+      await this.notificationService.notifyAccessRequestApproved(
+        request.user.telegramId,
+        adminNote,
+      );
+    } catch (error) {
+      console.error('Ошибка отправки уведомления об одобрении заявки:', error);
+    }
+
+    return updatedRequest;
   }
 
   /**

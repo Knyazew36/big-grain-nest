@@ -3,12 +3,14 @@ import { Update, Start, Command, Action, Ctx, Hears } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 import { ProductsService } from '../products/products.service';
 import { PrismaService } from 'nestjs-prisma';
+import { NotificationService } from './notification.service';
 
 @Update()
 export class BotUpdate {
   constructor(
     private readonly productsService: ProductsService,
     private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private keyboard = [
@@ -123,9 +125,43 @@ export class BotUpdate {
       await ctx.reply('Ошибка: не удалось определить пользователя.');
       return;
     }
-    await this.prisma.user.update({ where: { telegramId }, data: { role: 'OPERATOR' } });
-    await ctx.reply('✅ Доступ одобрен.');
-    // Можно уведомить пользователя, если нужно
+
+    try {
+      // Находим активную заявку пользователя
+      const user = await this.prisma.user.findUnique({ where: { telegramId } });
+      if (!user) {
+        await ctx.reply('❌ Пользователь не найден.');
+        return;
+      }
+
+      const request = await this.prisma.accessRequest.findFirst({
+        where: { userId: user.id, status: 'PENDING' },
+      });
+
+      if (!request) {
+        await ctx.reply('❌ Активная заявка не найдена.');
+        return;
+      }
+
+      // Обновляем роль пользователя на OPERATOR
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'OPERATOR' },
+      });
+
+      // Обновляем статус заявки
+      await this.prisma.accessRequest.update({
+        where: { id: request.id },
+        data: { status: 'APPROVED', processedAt: new Date() },
+      });
+
+      // Отправляем уведомление пользователю
+      await this.notificationService.notifyAccessRequestApproved(telegramId);
+      await ctx.reply('✅ Доступ одобрен. Пользователь уведомлен.');
+    } catch (error) {
+      console.error('Ошибка при одобрении заявки:', error);
+      await ctx.reply('❌ Ошибка при одобрении заявки.');
+    }
   }
 
   @Action(/decline_access:(.+)/)
@@ -136,8 +172,37 @@ export class BotUpdate {
       await ctx.reply('Ошибка: не удалось определить пользователя.');
       return;
     }
-    await ctx.reply('❌ Доступ отклонён.');
-    // Можно уведомить пользователя, если нужно
+
+    try {
+      // Находим активную заявку пользователя
+      const user = await this.prisma.user.findUnique({ where: { telegramId } });
+      if (!user) {
+        await ctx.reply('❌ Пользователь не найден.');
+        return;
+      }
+
+      const request = await this.prisma.accessRequest.findFirst({
+        where: { userId: user.id, status: 'PENDING' },
+      });
+
+      if (!request) {
+        await ctx.reply('❌ Активная заявка не найдена.');
+        return;
+      }
+
+      // Обновляем статус заявки
+      await this.prisma.accessRequest.update({
+        where: { id: request.id },
+        data: { status: 'DECLINED', processedAt: new Date() },
+      });
+
+      // Отправляем уведомление пользователю
+      await this.notificationService.notifyAccessRequestDeclined(telegramId);
+      await ctx.reply('❌ Доступ отклонён. Пользователь уведомлен.');
+    } catch (error) {
+      console.error('Ошибка при отклонении заявки:', error);
+      await ctx.reply('❌ Ошибка при отклонении заявки.');
+    }
   }
 
   private async ensureUser(ctx: Context) {
