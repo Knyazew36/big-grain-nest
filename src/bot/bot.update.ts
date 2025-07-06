@@ -117,46 +117,61 @@ export class BotUpdate {
     await this.showMenu(ctx);
   }
 
-  @Action(/approve_access:(.+)/)
+  @Action(/approve_access:(.+):(.+)/)
   async onApproveAccess(@Ctx() ctx: Context) {
     const data = (ctx.callbackQuery as any)?.data as string | undefined;
-    const telegramId = data?.split(':')[1];
-    if (!telegramId) {
-      await ctx.reply('Ошибка: не удалось определить пользователя.');
+    const parts = data?.split(':');
+    const telegramId = parts?.[1];
+    const requestId = parseInt(parts?.[2] || '0', 10);
+
+    if (!telegramId || !requestId) {
+      await ctx.reply('Ошибка: не удалось определить пользователя или заявку.');
       return;
     }
 
     try {
-      // Находим активную заявку пользователя
-      const user = await this.prisma.user.findUnique({ where: { telegramId } });
-      if (!user) {
-        await ctx.reply('❌ Пользователь не найден.');
+      // Проверяем права доступа (только OWNER, ADMIN, IT могут одобрять)
+      await this.ensureUser(ctx);
+      const currentUser = ctx.state.user;
+      if (!currentUser || !['OWNER', 'ADMIN', 'IT'].includes(currentUser.role)) {
+        await ctx.reply('❌ У вас нет прав для одобрения заявок.');
         return;
       }
 
-      const request = await this.prisma.accessRequest.findFirst({
-        where: { userId: user.id, status: 'PENDING' },
+      // Находим заявку по ID
+      const request = await this.prisma.accessRequest.findUnique({
+        where: { id: requestId },
+        include: { user: true },
       });
 
       if (!request) {
-        await ctx.reply('❌ Активная заявка не найдена.');
+        await ctx.reply('❌ Заявка не найдена.');
+        return;
+      }
+
+      if (request.status !== 'PENDING') {
+        await ctx.reply('❌ Заявка уже обработана.');
         return;
       }
 
       // Обновляем роль пользователя на OPERATOR
       await this.prisma.user.update({
-        where: { id: user.id },
+        where: { id: request.userId },
         data: { role: 'OPERATOR' },
       });
 
       // Обновляем статус заявки
       await this.prisma.accessRequest.update({
-        where: { id: request.id },
-        data: { status: 'APPROVED', processedAt: new Date() },
+        where: { id: requestId },
+        data: {
+          status: 'APPROVED',
+          processedAt: new Date(),
+          processedById: currentUser.id,
+        },
       });
 
       // Отправляем уведомление пользователю
-      await this.notificationService.notifyAccessRequestApproved(telegramId);
+      await this.notificationService.notifyAccessRequestApproved(request.user.telegramId);
       await ctx.reply('✅ Доступ одобрен. Пользователь уведомлен.');
     } catch (error) {
       console.error('Ошибка при одобрении заявки:', error);
@@ -164,40 +179,55 @@ export class BotUpdate {
     }
   }
 
-  @Action(/decline_access:(.+)/)
+  @Action(/decline_access:(.+):(.+)/)
   async onDeclineAccess(@Ctx() ctx: Context) {
     const data = (ctx.callbackQuery as any)?.data as string | undefined;
-    const telegramId = data?.split(':')[1];
-    if (!telegramId) {
-      await ctx.reply('Ошибка: не удалось определить пользователя.');
+    const parts = data?.split(':');
+    const telegramId = parts?.[1];
+    const requestId = parseInt(parts?.[2] || '0', 10);
+
+    if (!telegramId || !requestId) {
+      await ctx.reply('Ошибка: не удалось определить пользователя или заявку.');
       return;
     }
 
     try {
-      // Находим активную заявку пользователя
-      const user = await this.prisma.user.findUnique({ where: { telegramId } });
-      if (!user) {
-        await ctx.reply('❌ Пользователь не найден.');
+      // Проверяем права доступа (только OWNER, ADMIN, IT могут отклонять)
+      await this.ensureUser(ctx);
+      const currentUser = ctx.state.user;
+      if (!currentUser || !['OWNER', 'ADMIN', 'IT'].includes(currentUser.role)) {
+        await ctx.reply('❌ У вас нет прав для отклонения заявок.');
         return;
       }
 
-      const request = await this.prisma.accessRequest.findFirst({
-        where: { userId: user.id, status: 'PENDING' },
+      // Находим заявку по ID
+      const request = await this.prisma.accessRequest.findUnique({
+        where: { id: requestId },
+        include: { user: true },
       });
 
       if (!request) {
-        await ctx.reply('❌ Активная заявка не найдена.');
+        await ctx.reply('❌ Заявка не найдена.');
+        return;
+      }
+
+      if (request.status !== 'PENDING') {
+        await ctx.reply('❌ Заявка уже обработана.');
         return;
       }
 
       // Обновляем статус заявки
       await this.prisma.accessRequest.update({
-        where: { id: request.id },
-        data: { status: 'DECLINED', processedAt: new Date() },
+        where: { id: requestId },
+        data: {
+          status: 'DECLINED',
+          processedAt: new Date(),
+          processedById: currentUser.id,
+        },
       });
 
       // Отправляем уведомление пользователю
-      await this.notificationService.notifyAccessRequestDeclined(telegramId);
+      await this.notificationService.notifyAccessRequestDeclined(request.user.telegramId);
       await ctx.reply('❌ Доступ отклонён. Пользователь уведомлен.');
     } catch (error) {
       console.error('Ошибка при отклонении заявки:', error);

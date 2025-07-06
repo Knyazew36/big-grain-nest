@@ -91,9 +91,18 @@ export class AuthService {
       where: { userId: user.id, status: 'PENDING' },
     });
     if (existing) return { status: 'pending', requestId: existing.id };
+
     const request = await this.prisma.accessRequest.create({
       data: { userId: user.id, message },
     });
+
+    // Отправляем уведомление всем OWNER'ам о новой заявке
+    try {
+      await this.notificationService.notifyOwnersAccessRequest(user, request.id);
+    } catch (error) {
+      console.error("Ошибка отправки уведомления OWNER'ам о новой заявке:", error);
+    }
+
     return { status: 'created', requestId: request.id };
   }
 

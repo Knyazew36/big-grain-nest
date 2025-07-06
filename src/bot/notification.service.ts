@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf, Context as TelegrafContext } from 'telegraf';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectBot() private readonly bot: Telegraf<TelegrafContext>,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -45,7 +47,58 @@ export class NotificationService {
   }
 
   /**
-   * Уведомить админа о новой заявке на доступ
+   * Уведомить всех OWNER'ов о новой заявке на доступ
+   */
+  async notifyOwnersAccessRequest(user: any, requestId: number) {
+    try {
+      // Получаем всех пользователей с ролью OWNER
+      const owners = await this.prisma.user.findMany({
+        where: { role: 'OWNER', active: true },
+      });
+
+      if (owners.length === 0) {
+        console.warn('Нет активных пользователей с ролью OWNER для уведомления');
+        return;
+      }
+
+      // Получаем заявку для извлечения сообщения
+      const request = await this.prisma.accessRequest.findUnique({
+        where: { id: requestId },
+      });
+
+      const userData = user.data as any;
+      const message = `🚪 Новая заявка на доступ\n\n👤 Пользователь:\nИмя: ${userData?.first_name || ''} ${userData?.last_name || ''}\nUsername: @${userData?.username || ''}\nTelegram ID: ${user.telegramId}\n\n📝 Сообщение: ${request?.message || 'Не указано'}\n\n🆔 ID заявки: ${requestId}`;
+
+      // Отправляем уведомление каждому OWNER'у
+      for (const owner of owners) {
+        try {
+          await this.bot.telegram.sendMessage(owner.telegramId, message, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '✅ Одобрить',
+                    callback_data: `approve_access:${user.telegramId}:${requestId}`,
+                  },
+                  {
+                    text: '❌ Отклонить',
+                    callback_data: `decline_access:${user.telegramId}:${requestId}`,
+                  },
+                ],
+              ],
+            },
+          });
+        } catch (error) {
+          console.error(`Ошибка отправки уведомления OWNER'у ${owner.telegramId}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка при уведомлении OWNER'ов о заявке на доступ:", error);
+    }
+  }
+
+  /**
+   * Уведомить админа о новой заявке на доступ (устаревший метод)
    */
   async notifyAdminAccessRequest(user: any) {
     const adminId = '239676985';
