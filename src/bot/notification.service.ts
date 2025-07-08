@@ -96,26 +96,4 @@ export class NotificationService {
       console.error("Ошибка при уведомлении OWNER'ов о заявке на доступ:", error);
     }
   }
-
-  /**
-   * Уведомить админа о новой заявке на доступ (устаревший метод)
-   */
-  async notifyAdminAccessRequest(user: any) {
-    const adminId = '239676985';
-    const message = `🚪 Запрос на доступ\nИмя: ${user.firstName || ''} ${user.lastName || ''}\nUsername: @${user.username || ''}\nTelegram ID: ${user.telegramId}`;
-    try {
-      await this.bot.telegram.sendMessage(adminId, message, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: 'Одобрить', callback_data: `approve_access:${user.telegramId}` },
-              { text: 'Отклонить', callback_data: `decline_access:${user.telegramId}` },
-            ],
-          ],
-        },
-      });
-    } catch (e) {
-      console.error('Ошибка отправки уведомления админу:', e);
-    }
-  }
 }

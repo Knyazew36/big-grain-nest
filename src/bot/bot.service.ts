@@ -63,14 +63,6 @@ export class BotService implements OnModuleInit {
     }
   }
 
-  async notifyAdminAccessRequest(user: any) {
-    // Этот метод теперь делегирует к NotificationService
-    // Оставляем для обратной совместимости
-    console.warn(
-      'BotService.notifyAdminAccessRequest is deprecated. Use NotificationService instead.',
-    );
-  }
-
   /**
    * Отправить сообщение пользователю
    */

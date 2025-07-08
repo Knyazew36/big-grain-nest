@@ -26,7 +26,7 @@ import { NotificationService } from './notification.service';
         const prodToken = cfg.get<string>('TG_BOT_TOKEN');
 
         const token = isDev ? devToken : prodToken;
-
+        console.log('🐝 [BotModule] token=', isDev);
         if (!token) {
           throw new Error(
             `Bot token not found for ${isDev ? 'development' : 'production'} environment`,
