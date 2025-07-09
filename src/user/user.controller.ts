@@ -18,16 +18,16 @@ import { UserService } from './user.service';
 import { TelegramAuthGuard } from 'src/auth/guards/telegram-auth.guard';
 
 @Controller('user')
-@UseGuards(TelegramAuthGuard, RolesGuard)
 export class UserController {
   constructor(private readonly usersService: UserService) {}
 
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Get()
   @Roles('ADMIN', 'OWNER', 'IT')
   findAll(@Query() query: GetUsersDto) {
     return this.usersService.findAll(query);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Get('employees')
   @Roles('ADMIN', 'OWNER', 'OPERATOR')
   getEmployees() {
@@ -44,37 +44,37 @@ export class UserController {
   getUserRole(@Param('telegramId') telegramId: string) {
     return this.usersService.getUserRole(telegramId);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Get(':id')
   @Roles('ADMIN', 'OWNER', 'IT')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Post('/update/:id')
   @Roles('ADMIN', 'OWNER', 'IT')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Post('/remove/:id')
   @Roles('ADMIN', 'OWNER', 'IT')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Post('/hard-remove/:id')
   @Roles('OWNER', 'IT')
   hardRemove(@Param('id') id: string) {
     return this.usersService.hardRemove(+id);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Post('/restore/:id')
   @Roles('ADMIN', 'OWNER', 'IT')
   restore(@Param('id') id: string) {
     return this.usersService.restore(+id);
   }
-
+  @UseGuards(TelegramAuthGuard, RolesGuard)
   @Get('deleted/list')
   @Roles('ADMIN', 'OWNER', 'IT')
   getDeletedUsers() {
