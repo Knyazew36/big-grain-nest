@@ -215,6 +215,51 @@ export class BotUpdate {
     });
   }
 
+  @On('text')
+  async onTextMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('photo')
+  async onPhotoMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('video')
+  async onVideoMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('document')
+  async onDocumentMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('audio')
+  async onAudioMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('voice')
+  async onVoiceMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('sticker')
+  async onStickerMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('animation')
+  async onAnimationMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
+  @On('location')
+  async onLocationMessage(@Ctx() ctx: Context) {
+    await this.handleUnauthorizedMessage(ctx);
+  }
+
   @On('contact')
   async onContact(@Ctx() ctx: Context) {
     const contact = (ctx.message as any).contact;
@@ -317,5 +362,46 @@ export class BotUpdate {
     });
 
     return user && user.allowedPhones.length > 0;
+  }
+
+  private async handleUnauthorizedMessage(ctx: Context) {
+    // Проверяем, авторизован ли пользователь
+    const isAuthorized = await this.checkAuthorization(ctx);
+
+    if (!isAuthorized) {
+      await ctx.reply('🔐 Для использования бота необходимо авторизоваться.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '📱 Авторизоваться',
+                callback_data: 'request_phone',
+              },
+            ],
+          ],
+        },
+      });
+      return;
+    }
+
+    // Если пользователь авторизован, отправляем сообщение о доступных командах
+    // await ctx.reply(
+    //   '✅ Вы авторизованы! Используйте команды для работы с ботом:\n\n/start - Начать работу\n/phone - Повторная авторизация',
+    // );
+
+    const webappUrl = process.env.WEBAPP_URL || 'https://big-grain-tg.vercel.app';
+
+    await ctx.reply('✅ Авторизация успешна! Вам открыт доступ к приложению.', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '🚀 Открыть приложение',
+              web_app: { url: webappUrl },
+            },
+          ],
+        ],
+      },
+    });
   }
 }
