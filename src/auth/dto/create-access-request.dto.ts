@@ -1,5 +1,8 @@
 import { IsString, IsOptional, Length } from 'class-validator';
 
+/**
+ * @deprecated Используйте авторизацию через номер телефона в боте
+ */
 export class CreateAccessRequestDto {
   @IsString()
   @Length(1, 64)

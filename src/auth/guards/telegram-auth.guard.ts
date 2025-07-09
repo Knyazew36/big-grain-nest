@@ -15,7 +15,7 @@ export class TelegramAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const authHeader = String(req.header('authorization') || '');
 
-    // 1) Разбираем “tma <initDataRaw>”
+    // 1) Разбираем "tma <initDataRaw>"
     const [authType, initDataRaw = ''] = authHeader.split(' ');
     if (authType !== 'tma' || !initDataRaw) {
       throw new UnauthorizedException('Invalid authorization header');
@@ -35,7 +35,7 @@ export class TelegramAuthGuard implements CanActivate {
       validate(initDataRaw, botToken);
       // validate(initDataRaw, botToken, { expiresIn: 3600 });
     } catch (err: any) {
-      // сюда придёт ошибка как “Signature mismatch” или “Expired”
+      // сюда придёт ошибка как "Signature mismatch" или "Expired"
       throw new UnauthorizedException(`InitData validation failed: ${err.message}`);
     }
 
@@ -59,9 +59,23 @@ export class TelegramAuthGuard implements CanActivate {
         telegramId,
         data: initData?.user,
       },
+      include: {
+        allowedPhones: true, // Включаем привязанные телефоны
+      },
     });
+
+    // 5) Проверяем, что пользователь авторизован через телефон
+    if (user.allowedPhones.length === 0) {
+      throw new UnauthorizedException('User must authorize through phone number in bot first');
+    }
+
+    // 6) Проверяем, что пользователь не заблокирован
+    if (user.role === 'BLOCKED') {
+      throw new UnauthorizedException('User is blocked');
+    }
+
     // console.log('user telegram', user);
-    // 5) Кладём пользователя в request.user
+    // 7) Кладём пользователя в request.user
     (req as any).user = user;
     return true;
   }

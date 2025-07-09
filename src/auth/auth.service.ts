@@ -73,7 +73,15 @@ export class AuthService {
     return this.prisma.user.findUnique({ where: { telegramId } });
   }
 
+  async findByTelegramIdWithPhones(telegramId: string) {
+    return this.prisma.user.findUnique({
+      where: { telegramId },
+      include: { allowedPhones: true },
+    });
+  }
+
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Создать заявку на доступ, если нет активной
    */
   async createAccessRequest(telegramId: string, message?: string) {
@@ -106,6 +114,7 @@ export class AuthService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Получить все заявки (для админа)
    */
   async getAllAccessRequests(status?: string) {
@@ -123,6 +132,7 @@ export class AuthService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Отклонить заявку на доступ
    */
   async declineAccessRequest(requestId: number, adminTelegramId: string, adminNote?: string) {
@@ -167,6 +177,7 @@ export class AuthService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Одобрить заявку на доступ
    */
   async approveAccessRequest(requestId: number, adminTelegramId: string, adminNote?: string) {
@@ -217,6 +228,7 @@ export class AuthService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Проверить, есть ли заявка у пользователя
    */
   async getUserAccessRequests(telegramId: string) {

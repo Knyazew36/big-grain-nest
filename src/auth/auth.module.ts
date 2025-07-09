@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AllowedPhoneController } from './allowed-phone.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegramAuthGuard } from './guards/telegram-auth.guard';
 import { PrismaService } from 'nestjs-prisma';
@@ -11,7 +12,7 @@ import { NotificationModule } from '../bot/notification.module';
 @Module({
   imports: [ConfigModule, PrismaModule, NotificationModule],
 
-  controllers: [AuthController],
+  controllers: [AuthController, AllowedPhoneController],
   providers: [
     PrismaService,
     AuthService,

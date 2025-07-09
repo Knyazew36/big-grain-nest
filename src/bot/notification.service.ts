@@ -25,6 +25,7 @@ export class NotificationService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Отправить уведомление об отклонении заявки
    */
   async notifyAccessRequestDeclined(telegramId: string, adminNote?: string) {
@@ -33,6 +34,7 @@ export class NotificationService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Отправить уведомление об одобрении заявки с кнопкой webapp
    */
   async notifyAccessRequestApproved(telegramId: string, adminNote?: string) {
@@ -47,6 +49,7 @@ export class NotificationService {
   }
 
   /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
    * Уведомить всех OWNER'ов о новой заявке на доступ
    */
   async notifyOwnersAccessRequest(user: any, requestId: number) {

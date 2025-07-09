@@ -18,10 +18,36 @@ export class BotUpdate {
 
   @Start()
   async onStart(@Ctx() ctx: Context) {
+    // Проверяем, авторизован ли пользователь
+    const telegramId = String(ctx.from.id);
+    const user = await this.prisma.user.findUnique({
+      where: { telegramId },
+      include: { allowedPhones: true },
+    });
+
+    if (!user || user.allowedPhones.length === 0) {
+      await ctx.reply('👋 Привет! Для использования бота необходимо авторизоваться.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '📱 Авторизоваться',
+                callback_data: 'request_phone',
+              },
+            ],
+          ],
+        },
+      });
+      return;
+    }
+
     await ctx.reply('👋 Привет! Я бот для управления остатками товаров.');
     return;
   }
 
+  /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
+   */
   @Action(/approve_access:(.+):(.+)/)
   async onApproveAccess(@Ctx() ctx: Context) {
     const data = (ctx.callbackQuery as any)?.data as string | undefined;
@@ -84,6 +110,33 @@ export class BotUpdate {
     }
   }
 
+  @Action('request_phone')
+  async onRequestPhone(@Ctx() ctx: Context) {
+    const isAuthorized = await this.checkAuthorization(ctx);
+    if (isAuthorized) {
+      await ctx.reply('Вы уже авторизованы!');
+      return;
+    }
+
+    await ctx.reply('Пожалуйста, отправьте свой номер телефона, используя обычную клавиатуру:', {
+      reply_markup: {
+        keyboard: [
+          [
+            {
+              text: '📱 Отправить номер',
+              request_contact: true,
+            },
+          ],
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+      },
+    });
+  }
+
+  /**
+   * @deprecated Используйте авторизацию через номер телефона в боте
+   */
   @Action(/decline_access:(.+):(.+)/)
   async onDeclineAccess(@Ctx() ctx: Context) {
     const data = (ctx.callbackQuery as any)?.data as string | undefined;
@@ -142,11 +195,22 @@ export class BotUpdate {
 
   @Command('phone')
   async onPhoneCommand(@Ctx() ctx: Context) {
+    const isAuthorized = await this.checkAuthorization(ctx);
+    if (isAuthorized) {
+      await ctx.reply('Вы уже авторизованы!');
+      return;
+    }
+
     await ctx.reply('Пожалуйста, отправьте свой номер телефона, нажав на кнопку ниже:', {
       reply_markup: {
-        keyboard: [[{ text: '📱 Отправить номер', request_contact: true }]],
-        one_time_keyboard: true,
-        resize_keyboard: true,
+        inline_keyboard: [
+          [
+            {
+              text: '📱 Отправить номер',
+              callback_data: 'request_phone',
+            },
+          ],
+        ],
       },
     });
   }
@@ -166,22 +230,70 @@ export class BotUpdate {
     // Проверяем, разрешён ли номер
     const allowed = await this.allowedPhoneService.isPhoneAllowed(phone);
     if (!allowed) {
-      await ctx.reply('❌ Ваш номер не найден в списке разрешённых. Доступ запрещён.');
+      await ctx.reply(
+        '❌ Ваш номер не найден в списке разрешённых. Обратитесь к администратору для получения доступа.',
+      );
       return;
+    }
+
+    // Проверяем, не используется ли номер другим пользователем
+    if (allowed.usedById) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { id: allowed.usedById },
+      });
+      if (existingUser && existingUser.telegramId !== telegramId) {
+        await ctx.reply('❌ Этот номер телефона уже используется другим пользователем.');
+        return;
+      }
     }
 
     // Привязываем номер к пользователю
     const user = await this.prisma.user.upsert({
       where: { telegramId },
-      update: { data: { ...contact } },
-      create: { telegramId, data: { ...contact } },
+      update: {
+        data: { ...contact },
+        role: 'OPERATOR', // Убеждаемся, что пользователь получает роль OPERATOR
+      },
+      create: {
+        telegramId,
+        data: { ...contact },
+        role: 'OPERATOR', // Новые пользователи получают роль OPERATOR
+      },
     });
+
     await this.allowedPhoneService.bindPhoneToUser(phone, user.id);
 
-    // Можно выдать роль OPERATOR или другую, если нужно
-    await this.prisma.user.update({ where: { id: user.id }, data: { role: 'OPERATOR' } });
+    const webappUrl = process.env.WEBAPP_URL || 'https://big-grain-tg.vercel.app';
 
-    await ctx.reply('✅ Ваш номер подтверждён! Вам открыт доступ.');
+    // Обновляем предыдущее сообщение, убирая кнопку авторизации
+    try {
+      await ctx.editMessageText('✅ Авторизация успешна! Вам открыт доступ к приложению.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🚀 Открыть приложение',
+                web_app: { url: webappUrl },
+              },
+            ],
+          ],
+        },
+      });
+    } catch (error) {
+      // Если не удалось обновить, отправляем новое сообщение
+      await ctx.reply('✅ Авторизация успешна! Вам открыт доступ к приложению.', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🚀 Открыть приложение',
+                web_app: { url: webappUrl },
+              },
+            ],
+          ],
+        },
+      });
+    }
   }
 
   private async ensureUser(ctx: Context) {
@@ -194,5 +306,15 @@ export class BotUpdate {
       });
       ctx.state.user = user;
     }
+  }
+
+  private async checkAuthorization(ctx: Context): Promise<boolean> {
+    const telegramId = String(ctx.from.id);
+    const user = await this.prisma.user.findUnique({
+      where: { telegramId },
+      include: { allowedPhones: true },
+    });
+
+    return user && user.allowedPhones.length > 0;
   }
 }
