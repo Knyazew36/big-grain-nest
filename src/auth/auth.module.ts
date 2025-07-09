@@ -5,13 +5,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegramAuthGuard } from './guards/telegram-auth.guard';
 import { PrismaService } from 'nestjs-prisma';
 import { PrismaModule } from 'nestjs-prisma';
-import { BotModule } from 'src/bot/bot.module';
+import { AllowedPhoneService } from './allowed-phone.service';
+import { NotificationModule } from '../bot/notification.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, BotModule],
+  imports: [ConfigModule, PrismaModule, NotificationModule],
 
   controllers: [AuthController],
-  providers: [PrismaService, AuthService, TelegramAuthGuard, ConfigService],
-  exports: [TelegramAuthGuard],
+  providers: [
+    PrismaService,
+    AuthService,
+    TelegramAuthGuard,
+    ConfigService,
+    AllowedPhoneService,
+    // BotService,
+  ],
+  exports: [TelegramAuthGuard, AllowedPhoneService],
 })
 export class AuthModule {}

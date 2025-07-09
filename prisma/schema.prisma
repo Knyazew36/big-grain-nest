@@ -39,6 +39,7 @@ model User {
   active            Boolean         @default(true)
   accessRequests    AccessRequest[]
   processedRequests AccessRequest[] @relation("ProcessedBy") // Заявки, обработанные этим пользователем
+  allowedPhones     AllowedPhone[]
 }
 
 model Product {
@@ -120,4 +121,14 @@ model AccessRequest {
   processedAt   DateTime? // Когда заявка была обработана
   processedBy   User?               @relation("ProcessedBy", fields: [processedById], references: [id])
   processedById Int?
+}
+
+model AllowedPhone {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique // В формате +79991234567
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usedBy    User?    @relation(fields: [usedById], references: [id])
+  usedById  Int?
 }

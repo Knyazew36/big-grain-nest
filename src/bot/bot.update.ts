@@ -1,10 +1,11 @@
 // src/bot/bot.update.ts
-import { Update, Start, Command, Action, Ctx, Hears } from 'nestjs-telegraf';
+import { Update, Start, Command, Action, Ctx, On } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 import { ProductsService } from '../products/products.service';
 import { PrismaService } from 'nestjs-prisma';
 import { NotificationService } from './notification.service';
-import { BotService } from './bot.service';
+// import { BotService } from './bot.service';
+import { AllowedPhoneService } from '../auth/allowed-phone.service';
 
 @Update()
 export class BotUpdate {
@@ -12,6 +13,7 @@ export class BotUpdate {
     private readonly productsService: ProductsService,
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    private readonly allowedPhoneService: AllowedPhoneService,
   ) {}
 
   @Start()
@@ -136,6 +138,50 @@ export class BotUpdate {
       console.error('Ошибка при отклонении заявки:', error);
       await ctx.reply('❌ Ошибка при отклонении заявки.');
     }
+  }
+
+  @Command('phone')
+  async onPhoneCommand(@Ctx() ctx: Context) {
+    await ctx.reply('Пожалуйста, отправьте свой номер телефона, нажав на кнопку ниже:', {
+      reply_markup: {
+        keyboard: [[{ text: '📱 Отправить номер', request_contact: true }]],
+        one_time_keyboard: true,
+        resize_keyboard: true,
+      },
+    });
+  }
+
+  @On('contact')
+  async onContact(@Ctx() ctx: Context) {
+    const contact = (ctx.message as any).contact;
+    if (!contact || !contact.phone_number) {
+      await ctx.reply('Не удалось получить номер телефона.');
+      return;
+    }
+    const phone = contact.phone_number.startsWith('+')
+      ? contact.phone_number
+      : `+${contact.phone_number}`;
+    const telegramId = String(ctx.from.id);
+
+    // Проверяем, разрешён ли номер
+    const allowed = await this.allowedPhoneService.isPhoneAllowed(phone);
+    if (!allowed) {
+      await ctx.reply('❌ Ваш номер не найден в списке разрешённых. Доступ запрещён.');
+      return;
+    }
+
+    // Привязываем номер к пользователю
+    const user = await this.prisma.user.upsert({
+      where: { telegramId },
+      update: { data: { ...contact } },
+      create: { telegramId, data: { ...contact } },
+    });
+    await this.allowedPhoneService.bindPhoneToUser(phone, user.id);
+
+    // Можно выдать роль OPERATOR или другую, если нужно
+    await this.prisma.user.update({ where: { id: user.id }, data: { role: 'OPERATOR' } });
+
+    await ctx.reply('✅ Ваш номер подтверждён! Вам открыт доступ.');
   }
 
   private async ensureUser(ctx: Context) {

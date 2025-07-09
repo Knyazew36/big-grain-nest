@@ -1,6 +1,5 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { BotService } from '../bot/bot.service';
 import { CreateAccessRequestDto } from './dto/create-access-request.dto';
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
@@ -9,10 +8,7 @@ import { TelegramAuthGuard } from './guards/telegram-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly botService: BotService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   /**
    * Точки входа: принимает initData из Telegram WebApp и возвращает инфо о пользователе
