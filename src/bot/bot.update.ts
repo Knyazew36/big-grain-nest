@@ -222,11 +222,12 @@ export class BotUpdate {
       await ctx.reply('Не удалось получить номер телефона.');
       return;
     }
+
     const phone = contact.phone_number.startsWith('+')
       ? contact.phone_number
       : `+${contact.phone_number}`;
     const telegramId = String(ctx.from.id);
-
+    console.info('phone', phone);
     // Проверяем, разрешён ли номер
     const allowed = await this.allowedPhoneService.isPhoneAllowed(phone);
     if (!allowed) {

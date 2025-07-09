@@ -62,4 +62,22 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
+
+  @Post('/hard-remove/:id')
+  @Roles('OWNER', 'IT')
+  hardRemove(@Param('id') id: string) {
+    return this.usersService.hardRemove(+id);
+  }
+
+  @Post('/restore/:id')
+  @Roles('ADMIN', 'OWNER', 'IT')
+  restore(@Param('id') id: string) {
+    return this.usersService.restore(+id);
+  }
+
+  @Get('deleted/list')
+  @Roles('ADMIN', 'OWNER', 'IT')
+  getDeletedUsers() {
+    return this.usersService.getDeletedUsers();
+  }
 }
