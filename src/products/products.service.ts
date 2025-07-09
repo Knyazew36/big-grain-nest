@@ -4,7 +4,6 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'nestjs-prisma';
 import { Product } from '@prisma/client';
 import { BotService } from '../bot/bot.service';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ProductsService {
@@ -51,7 +50,7 @@ export class ProductsService {
     const allProducts = await this.prisma.product.findMany();
     const lowStock = allProducts.filter((p) => p.quantity < p.minThreshold);
     if (lowStock.length > 0) {
-      await this.botService.notifyLowStock(lowStock);
+      // await this.botService.notifyLowStock(lowStock);
     }
   }
 }

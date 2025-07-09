@@ -4,14 +4,10 @@ import { PrismaService } from 'nestjs-prisma';
 import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf, Context as TelegrafContext } from 'telegraf';
 import { Product } from '@prisma/client';
-import { Ctx, Update, Action } from 'nestjs-telegraf';
 
 @Injectable()
 export class BotService implements OnModuleInit {
-  constructor(
-    @InjectBot() private readonly bot: Telegraf<TelegrafContext>,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor() {}
 
   async onModuleInit() {}
   // регистрируем команды
@@ -44,58 +40,28 @@ export class BotService implements OnModuleInit {
   //     return next();
   //   });
   // }
-
-  async notifyLowStock(products: Product[]) {
-    if (!products.length) return;
-    const message =
-      '⚠️ Низкий остаток по продуктам:\n' +
-      products.map((p) => `• ${p.name}: ${p.quantity} (минимум: ${p.minThreshold})`).join('\n');
-    // Получаем всех пользователей (например, с ролью admin, либо всех)
-    const users = await this.prisma.user.findMany();
-    for (const user of users) {
-      if (user.telegramId) {
-        try {
-          await this.bot.telegram.sendMessage(user.telegramId, message);
-        } catch (e) {
-          console.error('Ошибка отправки уведомления:', e);
-        }
-      }
-    }
-  }
-
-  /**
-   * Отправить сообщение пользователю
-   */
-  async sendMessage(telegramId: string, message: string, extra?: any) {
-    try {
-      await this.bot.telegram.sendMessage(telegramId, message, extra);
-    } catch (error) {
-      console.error(`Ошибка отправки сообщения пользователю ${telegramId}:`, error);
-      throw error;
-    }
-  }
 }
 
-@Update()
-export class BotUpdate {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly bot: Telegraf<TelegrafContext>,
-  ) {}
+// @Update()
+// export class BotUpdate {
+//   constructor(
+//     private readonly prisma: PrismaService,
+//     private readonly bot: Telegraf<TelegrafContext>,
+//   ) {}
 
-  @Action(/approve_access:(.+)/)
-  async onApproveAccess(@Ctx() ctx: TelegrafContext) {
-    const telegramId = (ctx as any).match[1];
-    await this.prisma.user.update({ where: { telegramId }, data: { role: 'OPERATOR' } });
-    await ctx.reply('✅ Доступ одобрен.');
-    // Можно уведомить пользователя, если нужно
-  }
+//   @Action(/approve_access:(.+)/)
+//   async onApproveAccess(@Ctx() ctx: TelegrafContext) {
+//     const telegramId = (ctx as any).match[1];
+//     await this.prisma.user.update({ where: { telegramId }, data: { role: 'OPERATOR' } });
+//     await ctx.reply('✅ Доступ одобрен.');
+//     // Можно уведомить пользователя, если нужно
+//   }
 
-  @Action(/decline_access:(.+)/)
-  async onDeclineAccess(@Ctx() ctx: TelegrafContext) {
-    const telegramId = (ctx as any).match[1];
-    console.log(`Доступ отклонён для пользователя: ${telegramId}`);
-    await ctx.reply('❌ Доступ отклонён.');
-    // Можно уведомить пользователя, если нужно
-  }
-}
+//   @Action(/decline_access:(.+)/)
+//   async onDeclineAccess(@Ctx() ctx: TelegrafContext) {
+//     const telegramId = (ctx as any).match[1];
+//     console.log(`Доступ отклонён для пользователя: ${telegramId}`);
+//     await ctx.reply('❌ Доступ отклонён.');
+//     // Можно уведомить пользователя, если нужно
+//   }
+// }

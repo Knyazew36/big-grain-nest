@@ -1,14 +1,13 @@
 import { MiddlewareConsumer, NestModule, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BotModule } from './bot/bot.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { PrismaModule, PrismaService } from 'nestjs-prisma';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { RolesGuard } from './auth/guards/roles.guard';
-import { TelegramAuthGuard } from './auth/guards/telegram-auth.guard';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+
 import { ResponseInterceptor } from './auth/interceptors/response.interceptor';
 import { ShiftsModule } from './shifts/shifts.module';
 import { ReceiptsModule } from './receipts/receipts.module';
@@ -18,6 +17,7 @@ import { UserModule } from './user/user.module';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import { WinstonModule } from 'nest-winston';
+import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 
 const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
   filename: 'logs/application-%DATE%.log',
@@ -79,6 +79,34 @@ const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
     ShiftsModule,
     ReceiptsModule,
     ScheduleModule.forRoot(),
+    TelegrafModule.forRootAsync({
+      imports: [ConfigModule, PrismaModule], // <-- обязательно импортируем PrismaModule
+      inject: [ConfigService, PrismaService], // <-- инжектим оба
+      useFactory: (cfg: ConfigService): TelegrafModuleOptions => {
+        // Определяем токен в зависимости от окружения
+        const nodeEnv = cfg.get<string>('NODE_ENV') || 'development';
+        const isDev = nodeEnv === 'development';
+
+        const devToken = cfg.get<string>('TG_BOT_TOKEN_DEV');
+        const prodToken = cfg.get<string>('TG_BOT_TOKEN');
+
+        const token = isDev ? devToken : prodToken;
+        console.log('🐝 [BotModule] token=', isDev);
+        if (!token) {
+          throw new Error(
+            `Bot token not found for ${isDev ? 'development' : 'production'} environment`,
+          );
+        }
+
+        console.log(
+          `🐝 [BotModule] Environment: ${nodeEnv}, Using ${isDev ? 'DEV' : 'PROD'} bot token`,
+        );
+
+        return {
+          token,
+        };
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [

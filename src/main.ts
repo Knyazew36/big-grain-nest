@@ -14,6 +14,8 @@ async function bootstrap() {
       'https://localhost:5173',
       'https://localhost:5173/',
       'https://localhost:10004/',
+      'https://localhost:10004',
+
       process.env.WEBAPP_URL,
       'https://big-grain-tg.vercel.app',
       'https://front-test.devmill.ru',

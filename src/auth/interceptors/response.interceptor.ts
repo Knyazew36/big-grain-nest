@@ -1,10 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-  SetMetadata,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
@@ -15,6 +9,11 @@ export class ResponseInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    // Проверяем, является ли это контекстом Telegraf
+    if ((context.getType() as string) === 'telegraf') {
+      return next.handle(); // не оборачиваем ответ для Telegram-бота
+    }
+
     const request = context.switchToHttp().getRequest();
     const user = request.user; // Пользователь добавляется TelegramAuthGuard
 
