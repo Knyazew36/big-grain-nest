@@ -41,7 +41,20 @@ export class BotUpdate {
       return;
     }
 
-    await ctx.reply('👋 Привет! Я бот для управления остатками товаров.');
+    const webappUrl = process.env.WEBAPP_URL || 'https://big-grain-tg.vercel.app';
+
+    await ctx.reply('👋 Привет! Я бот для управления остатками товаров.', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '🚀 Открыть приложение',
+              web_app: { url: webappUrl },
+            },
+          ],
+        ],
+      },
+    });
     return;
   }
 
