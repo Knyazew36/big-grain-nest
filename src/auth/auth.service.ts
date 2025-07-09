@@ -1,6 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AccessRequest } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from 'nestjs-prisma';
 import { NotificationService } from '../bot/notification.service';

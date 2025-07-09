@@ -37,7 +37,7 @@ model User {
   NotificationLog NotificationLog[]
 
   active            Boolean         @default(true)
-  accessRequests    AccessRequest[] // Заявки на доступ пользователя
+  accessRequests    AccessRequest[]
   processedRequests AccessRequest[] @relation("ProcessedBy") // Заявки, обработанные этим пользователем
 }
 
