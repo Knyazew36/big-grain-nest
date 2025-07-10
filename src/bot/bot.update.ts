@@ -43,7 +43,7 @@ export class BotUpdate {
 
     const webappUrl = process.env.WEBAPP_URL || 'https://big-grain-tg.vercel.app';
 
-    await ctx.reply('👋 Привет! Я бот для управления остатками товаров.', {
+    await ctx.reply('👋 Привет! Я бот для управления складом.', {
       reply_markup: {
         inline_keyboard: [
           [
@@ -56,71 +56,6 @@ export class BotUpdate {
       },
     });
     return;
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   */
-  @Action(/approve_access:(.+):(.+)/)
-  async onApproveAccess(@Ctx() ctx: Context) {
-    const data = (ctx.callbackQuery as any)?.data as string | undefined;
-    const parts = data?.split(':');
-    const telegramId = parts?.[1];
-    const requestId = parseInt(parts?.[2] || '0', 10);
-
-    if (!telegramId || !requestId) {
-      await ctx.reply('Ошибка: не удалось определить пользователя или заявку.');
-      return;
-    }
-
-    try {
-      // Проверяем права доступа (только OWNER, ADMIN, IT могут одобрять)
-      await this.ensureUser(ctx);
-      const currentUser = ctx.state.user;
-      if (!currentUser || !['OWNER', 'ADMIN', 'IT'].includes(currentUser.role)) {
-        await ctx.reply('❌ У вас нет прав для одобрения заявок.');
-        return;
-      }
-
-      // Находим заявку по ID
-      const request = await this.prisma.accessRequest.findUnique({
-        where: { id: requestId },
-        include: { user: true },
-      });
-
-      if (!request) {
-        await ctx.reply('❌ Заявка не найдена.');
-        return;
-      }
-
-      if (request.status !== 'PENDING') {
-        await ctx.reply('❌ Заявка уже обработана.');
-        return;
-      }
-
-      // Обновляем роль пользователя на OPERATOR
-      await this.prisma.user.update({
-        where: { id: request.userId },
-        data: { role: 'OPERATOR' },
-      });
-
-      // Обновляем статус заявки
-      await this.prisma.accessRequest.update({
-        where: { id: requestId },
-        data: {
-          status: 'APPROVED',
-          processedAt: new Date(),
-          processedById: currentUser.id,
-        },
-      });
-
-      // Отправляем уведомление пользователю
-      await this.notificationService.notifyAccessRequestApproved(request.user.telegramId);
-      await ctx.reply('✅ Доступ одобрен. Пользователь уведомлен.');
-    } catch (error) {
-      console.error('Ошибка при одобрении заявки:', error);
-      await ctx.reply('❌ Ошибка при одобрении заявки.');
-    }
   }
 
   @Action('request_phone')
@@ -147,85 +82,9 @@ export class BotUpdate {
     });
   }
 
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   */
-  @Action(/decline_access:(.+):(.+)/)
-  async onDeclineAccess(@Ctx() ctx: Context) {
-    const data = (ctx.callbackQuery as any)?.data as string | undefined;
-    const parts = data?.split(':');
-    const telegramId = parts?.[1];
-    const requestId = parseInt(parts?.[2] || '0', 10);
-
-    if (!telegramId || !requestId) {
-      await ctx.reply('Ошибка: не удалось определить пользователя или заявку.');
-      return;
-    }
-
-    try {
-      // Проверяем права доступа (только OWNER, ADMIN, IT могут отклонять)
-      await this.ensureUser(ctx);
-      const currentUser = ctx.state.user;
-      if (!currentUser || !['OWNER', 'ADMIN', 'IT'].includes(currentUser.role)) {
-        await ctx.reply('❌ У вас нет прав для отклонения заявок.');
-        return;
-      }
-
-      // Находим заявку по ID
-      const request = await this.prisma.accessRequest.findUnique({
-        where: { id: requestId },
-        include: { user: true },
-      });
-
-      if (!request) {
-        await ctx.reply('❌ Заявка не найдена.');
-        return;
-      }
-
-      if (request.status !== 'PENDING') {
-        await ctx.reply('❌ Заявка уже обработана.');
-        return;
-      }
-
-      // Обновляем статус заявки
-      await this.prisma.accessRequest.update({
-        where: { id: requestId },
-        data: {
-          status: 'DECLINED',
-          processedAt: new Date(),
-          processedById: currentUser.id,
-        },
-      });
-
-      // Отправляем уведомление пользователю
-      await this.notificationService.notifyAccessRequestDeclined(request.user.telegramId);
-      await ctx.reply('❌ Доступ отклонён. Пользователь уведомлен.');
-    } catch (error) {
-      console.error('Ошибка при отклонении заявки:', error);
-      await ctx.reply('❌ Ошибка при отклонении заявки.');
-    }
-  }
-
   @Command('phone')
   async onPhoneCommand(@Ctx() ctx: Context) {
-    const isAuthorized = await this.checkAuthorization(ctx);
-    if (isAuthorized) {
-      await ctx.reply('Вы уже авторизованы!');
-      return;
-    }
-
-    await ctx.reply('Пожалуйста, отправьте свой номер телефона, нажав на кнопку ниже:', {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '📱 Отправить номер',
-              callback_data: 'request_phone',
-            },
-          ],
-        ],
-      },
-    });
+    await this.handleUnauthorizedMessage(ctx);
   }
 
   @On('text')
@@ -396,11 +255,6 @@ export class BotUpdate {
       });
       return;
     }
-
-    // Если пользователь авторизован, отправляем сообщение о доступных командах
-    // await ctx.reply(
-    //   '✅ Вы авторизованы! Используйте команды для работы с ботом:\n\n/start - Начать работу\n/phone - Повторная авторизация',
-    // );
 
     const webappUrl = process.env.WEBAPP_URL || 'https://big-grain-tg.vercel.app';
 
