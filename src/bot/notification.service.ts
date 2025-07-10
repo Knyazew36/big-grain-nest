@@ -8,7 +8,7 @@ import { PrismaService } from 'nestjs-prisma';
 export class NotificationService {
   constructor(
     @InjectBot() private readonly bot: Telegraf<TelegrafContext>,
-    private readonly config: ConfigService,
+    public readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {}
 

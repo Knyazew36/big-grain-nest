@@ -66,7 +66,7 @@ export class BotUpdate {
       return;
     }
 
-    await ctx.reply('Пожалуйста, отправьте свой номер телефона, используя обычную клавиатуру:', {
+    await ctx.reply('Пожалуйста, отправьте свой номер телефона, нажав на кнопку ниже:', {
       reply_markup: {
         keyboard: [
           [
