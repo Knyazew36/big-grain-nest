@@ -1,6 +1,5 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAccessRequestDto } from './dto/create-access-request.dto';
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Role } from '@prisma/client';
@@ -26,80 +25,6 @@ export class AuthController {
     }
     // можно вернуть роль и id, или JWT (по желанию)
     return { id: user.id, role: user.role };
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   * Новый эндпоинт: создать заявку на доступ (или вернуть существующую)
-   */
-  @Post('access-request')
-  async createAccessRequest(@Body() dto: CreateAccessRequestDto) {
-    console.warn('DEPRECATED: Используйте авторизацию через номер телефона в боте');
-    return this.authService.createAccessRequest(dto.telegramId, dto.message);
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   * Новый эндпоинт: получить все заявки (для админа)
-   */
-  @Post('access-requests')
-  @UseGuards(TelegramAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'OWNER', 'IT')
-  async getAllAccessRequests(@Body('status') status?: string) {
-    console.warn('DEPRECATED: Используйте авторизацию через номер телефона в боте');
-    return this.authService.getAllAccessRequests(status);
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   * Новый эндпоинт: получить только PENDING заявки (для админа)
-   */
-  @Post('pending-access-requests')
-  @UseGuards(TelegramAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'OWNER', 'IT')
-  async getPendingAccessRequests() {
-    console.warn('DEPRECATED: Используйте авторизацию через номер телефона в боте');
-    return this.authService.getAllAccessRequests('PENDING');
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   * Новый эндпоинт: отклонить заявку на доступ (только для админа)
-   */
-  @Post('decline-access-request')
-  @UseGuards(TelegramAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'OWNER', 'IT')
-  async declineAccessRequest(
-    @Body('requestId') requestId: number,
-    @Body('adminTelegramId') adminTelegramId: string,
-    @Body('adminNote') adminNote?: string,
-  ) {
-    console.warn('DEPRECATED: Используйте авторизацию через номер телефона в боте');
-    return this.authService.declineAccessRequest(requestId, adminTelegramId, adminNote);
-  }
-
-  /**
-   * @deprecated Используйте авторизацию через номер телефона в боте
-   * Новый эндпоинт: одобрить заявку на доступ (только для админа)
-   */
-  @Post('approve-access-request')
-  @UseGuards(TelegramAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'OWNER', 'IT')
-  async approveAccessRequest(
-    @Body('requestId') requestId: number,
-    @Body('adminTelegramId') adminTelegramId: string,
-    @Body('adminNote') adminNote?: string,
-  ) {
-    console.warn('DEPRECATED: Используйте авторизацию через номер телефона в боте');
-    return this.authService.approveAccessRequest(requestId, adminTelegramId, adminNote);
-  }
-
-  /**
-   * Новый эндпоинт: получить заявки пользователя по telegramId
-   */
-  @Post('user-access-requests')
-  async getUserAccessRequests(@Body('telegramId') telegramId: string) {
-    return this.authService.getUserAccessRequests(telegramId);
   }
 
   /**
